@@ -1,0 +1,11 @@
+{
+  "name": "pulse-4d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A browser-native workspace for spatial four-dimensional geometry.",
+  "scripts": {
+    "start": "python3 -m http.server 4173",
+    "test": "node --test tests/*.test.js"
+  }
+}

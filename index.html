@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#151719" />
+    <meta
+      name="description"
+      content="Model beyond three dimensions. Pulse is a browser-native 4D geometry workspace with six-plane rotation, W cross-sections, vertex editing and animation."
+    />
+    <title>Pulse — 4D workspace</title>
+    <link rel="icon" href="./assets/mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="Pulse home"
+          ><img src="./assets/mark.svg" alt="" /><strong
+            >pulse<span>4D</span></strong
+          ></a
+        >
+        <div class="menubar">
+          <button data-action="file-menu">File</button
+          ><button data-action="edit-menu">Edit</button
+          ><button data-action="view-menu">View</button
+          ><button data-action="help">Help</button>
+        </div>
+        <div class="project-label">
+          <span class="status-dot"></span
+          ><button id="project-name" data-action="rename-project">
+            Untitled exploration</button
+          ><span class="save-state" id="save-state">Saved locally</span>
+        </div>
+        <div class="top-actions">
+          <button
+            class="icon-button"
+            data-action="commands"
+            title="Command palette (Ctrl/⌘ K)"
+            aria-label="Command palette"
+          >
+            <i data-icon="Search"></i></button
+          ><button class="export-button" data-action="export-menu">
+            <i data-icon="Upload"></i>Export<i data-icon="ChevronDown"></i>
+          </button>
+        </div>
+      </header>
+      <nav class="workspacebar" aria-label="Workspace">
+        <div class="workspace-tabs">
+          <button class="active" data-workspace="model">
+            <i data-icon="Box"></i>Modeling</button
+          ><button data-workspace="section">
+            <i data-icon="ScanLine"></i>Cross-section</button
+          ><button data-workspace="animate">
+            <i data-icon="Clapperboard"></i>Animation
+          </button>
+        </div>
+        <div class="workspace-note">
+          <span class="tiny-pill">4D</span> A new dimension of making<span
+            class="separator"
+          ></span
+          ><button data-action="help" class="subtle">
+            Quick guide <i data-icon="ArrowUpRight"></i>
+          </button>
+        </div>
+      </nav>
+      <main class="workbench">
+        <aside class="left-panel">
+          <div class="panel-title">
+            SCENE COLLECTION<button
+              class="icon-button"
+              data-action="add-menu"
+              aria-label="Add object"
+              title="Add object"
+            >
+              <i data-icon="Plus"></i>
+            </button>
+          </div>
+          <div class="scene-label">
+            <i data-icon="ChevronDown"></i
+            ><i data-icon="FolderOpen"></i>Collection<span id="object-count"
+              >1</span
+            >
+          </div>
+          <div id="outliner" class="outliner"></div>
+          <div class="library">
+            <div class="panel-title">
+              PRIMITIVES<span class="tiny-pill">4D</span>
+            </div>
+            <p class="panel-description">Every shape is a starting point.</p>
+            <div id="primitives" class="primitive-grid"></div>
+            <button class="text-button add-custom" data-action="add-custom">
+              <i data-icon="PenTool"></i> Create empty mesh
+              <i data-icon="Plus"></i>
+            </button>
+          </div>
+          <div class="left-bottom">
+            <div class="mini-heading">
+              <span class="live-dot"></span>FOUR SPATIAL DIMENSIONS
+            </div>
+            <p>Think outside the XYZ.</p>
+            <div class="dimension-chips">
+              <span>X</span><span>Y</span><span>Z</span><span>W</span>
+            </div>
+            <button class="guide-link" data-action="help">
+              Explore the fourth dimension<i data-icon="ArrowUpRight"></i>
+            </button>
+          </div>
+        </aside>
+        <section class="center-panel">
+          <div class="viewport-toolbar">
+            <div>
+              <select id="mode" aria-label="Interaction mode">
+                <option value="object">Object Mode</option>
+                <option value="edit">Vertex Mode</option></select
+              ><span class="toolbar-divider"></span
+              ><button data-action="frame" title="Frame scene (F)">
+                View<i data-icon="ChevronDown"></i></button
+              ><button data-action="add-menu">
+                Add<i data-icon="Plus"></i>
+              </button>
+            </div>
+            <div>
+              <button
+                id="grid-button"
+                class="icon-button active"
+                data-action="grid"
+                aria-label="Toggle floor grid"
+                title="Floor grid"
+              >
+                <i data-icon="Grid3x3"></i></button
+              ><button
+                id="vertices-button"
+                class="icon-button active"
+                data-action="vertices"
+                aria-label="Toggle vertices"
+                title="Show vertices"
+              >
+                <i data-icon="Waypoints"></i></button
+              ><span class="toolbar-divider"></span
+              ><button
+                class="icon-button"
+                id="wire-button"
+                data-action="wire"
+                aria-label="Wireframe shading"
+                title="Wireframe"
+              >
+                <i data-icon="Box"></i></button
+              ><button
+                class="icon-button active"
+                id="solid-button"
+                data-action="solid"
+                aria-label="Translucent shading"
+                title="Translucent"
+              >
+                <i data-icon="Layers"></i>
+              </button>
+            </div>
+          </div>
+          <div class="viewport" id="viewport">
+            <canvas
+              id="canvas"
+              aria-label="Interactive 4D viewport. Drag to orbit, scroll to zoom. In vertex mode click vertices to edit their four coordinates."
+            ></canvas>
+            <div class="viewport-caption">
+              <div>
+                <span class="live-dot"></span
+                ><span id="view-label">User perspective</span>
+              </div>
+              <p id="selection-label">Collection / Tesseract</p>
+              <span id="projection-label">4D PERSPECTIVE → 3D</span>
+            </div>
+            <div class="tool-rail" aria-label="Viewport tools">
+              <button
+                class="active"
+                data-tool="orbit"
+                title="Orbit camera (Q)"
+                aria-label="Orbit camera"
+              >
+                <i data-icon="Orbit"></i></button
+              ><button
+                data-tool="select"
+                title="Select vertices (V)"
+                aria-label="Select vertices"
+              >
+                <i data-icon="MousePointer2"></i>
+              </button>
+              <div></div>
+              <button
+                data-tool="move"
+                title="Move object (G)"
+                aria-label="Move object"
+              >
+                <i data-icon="Move"></i></button
+              ><button
+                data-tool="rotate"
+                title="Rotate in XW and YW (R)"
+                aria-label="Rotate in four dimensions"
+              >
+                <i data-icon="Rotate3d"></i></button
+              ><button
+                data-tool="scale"
+                title="Scale object (S)"
+                aria-label="Scale object"
+              >
+                <i data-icon="Scaling"></i>
+              </button>
+              <div></div>
+              <button
+                data-action="frame"
+                title="Frame scene (F)"
+                aria-label="Frame scene"
+              >
+                <i data-icon="Focus"></i>
+              </button>
+            </div>
+            <div class="axis-gizmo" aria-hidden="true">
+              <span class="axis-line x"></span><span class="axis-line y"></span
+              ><span class="axis-line z"></span><b class="axis-x">X</b
+              ><b class="axis-y">Y</b><b class="axis-z">Z</b
+              ><b class="axis-w">W</b>
+            </div>
+            <div class="viewport-bottom">
+              <div>
+                <span class="object-badge"
+                  ><i data-icon="Box"></i
+                  ><span id="object-badge">Tesseract</span></span
+                ><span id="geometry-count">16 vertices · 32 edges</span>
+              </div>
+              <button id="reset-view" data-action="frame">
+                <i data-icon="Maximize"></i>Frame scene <kbd>F</kbd>
+              </button>
+            </div>
+            <div class="section-indicator" id="section-indicator" hidden>
+              <i data-icon="ScanLine"></i>W CROSS-SECTION
+              <strong id="section-value">0.00</strong>
+            </div>
+            <div class="empty-scene" id="empty-scene" hidden>
+              <i data-icon="Box"></i>
+              <h2>Room for a new dimension.</h2>
+              <p>Add a primitive to start exploring.</p>
+              <button class="primary" data-action="add-tesseract">
+                Add tesseract
+              </button>
+            </div>
+          </div>
+          <div class="dimension-strip">
+            <div class="dimension-title">
+              <i data-icon="Orbit"></i>
+              <div>
+                <strong>Fourth dimension</strong
+                ><span>Rotate through W space</span>
+              </div>
+            </div>
+            <div class="quick-rotation">
+              <label for="quick-xw">XW</label
+              ><input
+                id="quick-xw"
+                type="range"
+                min="-180"
+                max="180"
+                step="1"
+                value="25"
+              /><output id="quick-xw-value">25°</output>
+            </div>
+            <button class="spin-button" id="spin-button" data-action="spin">
+              <i data-icon="Play"></i>Auto-rotate
+            </button>
+          </div>
+          <div class="timeline">
+            <div class="timeline-header">
+              <div>
+                <i data-icon="Film"></i><strong>Timeline</strong
+                ><span id="key-count" class="muted">0 keyframes</span>
+              </div>
+              <div class="playback">
+                <button
+                  class="icon-button"
+                  data-action="rewind"
+                  aria-label="First frame"
+                >
+                  <i data-icon="SkipBack"></i></button
+                ><button
+                  class="icon-button"
+                  data-action="play"
+                  id="play-button"
+                  aria-label="Play animation"
+                >
+                  <i data-icon="Play"></i></button
+                ><button
+                  class="icon-button"
+                  data-action="end"
+                  aria-label="Last frame"
+                >
+                  <i data-icon="SkipForward"></i>
+                </button>
+              </div>
+              <div>
+                <button
+                  class="key-button"
+                  data-action="keyframe"
+                  title="Insert or replace a transform keyframe (I)"
+                >
+                  <i data-icon="DiamondPlus"></i>Insert key</button
+                ><span class="frame-box" id="frame-label">001</span
+                ><span class="muted">/ 240</span>
+              </div>
+            </div>
+            <div class="timeline-track" id="timeline-track">
+              <div class="ruler">
+                <span>1</span><span>40</span><span>80</span><span>120</span
+                ><span>160</span><span>200</span><span>240</span>
+              </div>
+              <div class="track-line"></div>
+              <div id="key-markers"></div>
+              <input
+                type="range"
+                id="frame"
+                min="1"
+                max="240"
+                value="1"
+                aria-label="Animation frame"
+              />
+              <div class="playhead" id="playhead"><span>1</span></div>
+            </div>
+          </div>
+        </section>
+        <aside class="right-panel">
+          <div class="panel-title">
+            PROPERTIES<i data-icon="SlidersHorizontal"></i>
+          </div>
+          <div id="inspector"></div>
+          <div class="projection-panel">
+            <div class="section-heading">
+              <i data-icon="Camera"></i>Projection
+            </div>
+            <label class="field-label"
+              >4D → 3D<select id="projection">
+                <option value="perspective">Perspective</option>
+                <option value="orthographic">Orthographic</option>
+              </select></label
+            ><label class="field-label"
+              >W camera distance
+              <div class="range-field">
+                <input
+                  id="w-distance"
+                  type="range"
+                  min="3"
+                  max="12"
+                  step="0.1"
+                  value="5"
+                /><output id="w-distance-value">5.0</output>
+              </div></label
+            >
+            <div class="projection-note">
+              <i data-icon="Info"></i
+              ><span>W is a spatial axis, independent of time.</span>
+            </div>
+          </div>
+          <div class="section-panel">
+            <div class="section-heading">
+              <i data-icon="ScanLine"></i>W cross-section<label class="switch"
+                ><input
+                  id="section-enabled"
+                  type="checkbox"
+                  aria-label="Enable W cross-section" /><span></span
+              ></label>
+            </div>
+            <label class="field-label"
+              >Slice position
+              <div class="range-field">
+                <input
+                  id="slice"
+                  type="range"
+                  min="-3"
+                  max="3"
+                  step="0.01"
+                  value="0"
+                /><output id="slice-value">0.00</output>
+              </div></label
+            >
+            <p class="small-note">
+              Intersect the 4D mesh with a 3D hyperplane.
+            </p>
+          </div>
+        </aside>
+      </main>
+      <footer class="statusbar">
+        <div>
+          <span class="live-dot"></span><span id="status-text">Ready</span>
+        </div>
+        <div class="controls-hint">
+          <span><i data-icon="MousePointer2"></i>Drag to orbit</span
+          ><span>Shift + drag to pan</span><span>Scroll to zoom</span>
+        </div>
+        <div>
+          <span id="stats">16 verts</span
+          ><span class="footer-version">PULSE 1.0</span>
+        </div>
+      </footer>
+    </div>
+    <div id="menu" class="menu" hidden></div>
+    <div id="toast" role="status" class="toast" hidden></div>
+    <dialog id="dialog">
+      <div class="dialog-top">
+        <span id="dialog-eyebrow">PULSE WORKSPACE</span
+        ><button
+          class="icon-button"
+          data-action="close-dialog"
+          aria-label="Close dialog"
+        >
+          <i data-icon="X"></i>
+        </button>
+      </div>
+      <div id="dialog-content"></div>
+    </dialog>
+    <input
+      type="file"
+      id="file-input"
+      accept=".pulse4d,.json,application/json"
+      hidden
+    />
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
